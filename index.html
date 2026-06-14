@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@xifu/check-text-color - Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin-bottom: 30px; color: #1a1a2e; }
+    h2 { margin: 30px 0 15px; color: #16213e; }
+
+    /* 测试卡片 */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    /* 可见性好的示例 */
+    .good-contrast {
+      color: #1a1a1a;
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* 可见性差的示例 */
+    .poor-contrast {
+      color: #b0b0b0;
+      background: #d0d0d0;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* 各种对比度场景 */
+    .contrast-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      flex-wrap: wrap;
+    }
+    .contrast-row label {
+      min-width: 100px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    /* 颜色块 */
+    .color-chip {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* 操作按钮 */
+    .btn {
+      padding: 14px 36px;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: #1a1a2e;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(26,26,46,0.3);
+    }
+    .btn:active { transform: translateY(0); }
+
+    /* 结果区域 */
+    .result-area {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 600px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    /* 统计概览 */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .stat-item {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-item .number {
+      font-size: 32px;
+      font-weight: 700;
+      display: block;
+    }
+    .stat-item .label {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .stat-item.good .number { color: #2ecc71; }
+    .stat-item.poor .number { color: #e74c3c; }
+    .stat-item.avg .number { color: #3498db; }
+
+    /* 可见性差 - 非常接近背景 */
+    .very-poor {
+      color: #c0c0c0;
+      background: #e0e0e0;
+    }
+
+    /* 中等对比度 */
+    .medium-contrast {
+      color: #888888;
+      background: #f0f0f0;
+    }
+
+    .info-text {
+      font-size: 14px;
+      color: #666;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 Check Text Color</h1>
+    <p class="info-text">评估页面文字 DOM 渲染时的视觉可见性，基于 html2canvas + Otsu 像素聚类分析</p>
+
+    <!-- 测试用例 -->
+    <div class="card">
+      <h2>📝 测试场景</h2>
+
+      <div class="contrast-row" style="background: #ffffff;">
+        <label>优秀对比度</label>
+        <span class="color-chip" style="color:#1a1a1a; background:#ffffff; border:1px solid #ddd;">
+          深色文字在白色背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: #f0f0f0;">
+        <label>中等对比度</label>
+        <span class="color-chip" style="color:#888888; background:#f0f0f0;">
+          灰色文字在浅灰背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: #e8e8e8;">
+        <label>较差对比度</label>
+        <span class="color-chip" style="color:#b0b0b0; background:#d0d0d0; border:1px solid #ccc;">
+          浅灰文字在灰背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: #1a1a2e;">
+        <label>暗色背景</label>
+        <span class="color-chip" style="color:#ffffff; background:#1a1a2e;">
+          白色文字在深色背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: #2c3e50;">
+        <label>暗色背景·低对比</label>
+        <span class="color-chip" style="color:#5a6a7a; background:#2c3e50;">
+          灰色文字在深蓝灰背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: #f8f9fa;">
+        <label>彩色背景</label>
+        <span class="color-chip" style="color:#e74c3c; background:#f8d7da;">
+          红色文字在浅红背景上
+        </span>
+      </div>
+
+      <div class="contrast-row" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <label>渐变背景</label>
+        <span class="color-chip" style="color:#ffffff; background:transparent;">
+          白色文字在渐变背景上
+        </span>
+      </div>
+    </div>
+
+    <!-- 控制区 -->
+    <div style="text-align: center; margin: 30px 0;">
+      <button class="btn" id="analyzeBtn">🔍 分析文字可见性</button>
+      <div style="margin-top: 12px;">
+        <label style="cursor:pointer; font-size:14px; color:#666;">
+          <input type="checkbox" id="skipScreenshot" /> 跳过截图（仅计算样式，速度更快）
+        </label>
+      </div>
+    </div>
+
+    <!-- 统计概览 -->
+    <div id="statsArea" style="display:none;">
+      <h2>📊 分析概览</h2>
+      <div class="stats" id="statsContainer"></div>
+    </div>
+
+    <!-- 详细结果 -->
+    <div id="resultArea" style="display:none;">
+      <h2>📋 详细结果</h2>
+      <div class="result-area" id="resultContent">分析中...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { checkTextVisibility } from './src/index.ts';
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const skipCb = document.getElementById('skipScreenshot');
+    const statsArea = document.getElementById('statsArea');
+    const statsContainer = document.getElementById('statsContainer');
+    const resultArea = document.getElementById('resultArea');
+    const resultContent = document.getElementById('resultContent');
+
+    analyzeBtn.addEventListener('click', async () => {
+      analyzeBtn.textContent = '⏳ 分析中...';
+      analyzeBtn.disabled = true;
+
+      try {
+        const result = await checkTextVisibility({
+          skipScreenshot: skipCb.checked,
+          concurrency: 3,
+        });
+
+        // 显示统计
+        statsArea.style.display = 'block';
+        statsContainer.innerHTML = `
+          <div class="stat-item">
+            <span class="number">${result.total}</span>
+            <span class="label">总计元素</span>
+          </div>
+          <div class="stat-item good">
+            <span class="number">${result.visible}</span>
+            <span class="label">可见性好</span>
+          </div>
+          <div class="stat-item poor">
+            <span class="number">${result.poor}</span>
+            <span class="label">可见性差</span>
+          </div>
+          <div class="stat-item">
+            <span class="number">${result.poorPercentage}%</span>
+            <span class="label">问题占比</span>
+          </div>
+          <div class="stat-item avg">
+            <span class="number">${result.averageContrastRatio}</span>
+            <span class="label">平均对比度</span>
+          </div>
+          <div class="stat-item avg">
+            <span class="number">${result.averageScore}</span>
+            <span class="label">平均评分</span>
+          </div>
+        `;
+
+        // 显示详细结果
+        resultArea.style.display = 'block';
+
+        const lines = [
+          `═══════════════════════════════════════`,
+          `  Check Text Color - 分析报告`,
+          `═══════════════════════════════════════`,
+          ``,
+          `  ⏱ 耗时: ${result.duration}ms`,
+          `  📅 时间: ${new Date(result.timestamp).toLocaleString()}`,
+          `  📊 总计: ${result.total} 个元素`,
+          `  ✅ 可见性好: ${result.visible}`,
+          `  ❌ 可见性差: ${result.poor} (${result.poorPercentage}%)`,
+          `  📈 平均对比度: ${result.averageContrastRatio}:1`,
+          `  ⭐ 平均评分: ${result.averageScore}/100`,
+          ``,
+          `─────────────────────────────────────`,
+          `  详细结果:`,
+          `─────────────────────────────────────`,
+          ``,
+        ];
+
+        result.elements.forEach((el, idx) => {
+          const icon = el.isVisible ? '✅' : '❌';
+          const methodIcon = el.analysisMethod === 'screenshot' ? '📸' : '⚡';
+          lines.push(
+            `  [#${idx + 1}] ${icon} <${el.tagName}>`,
+            `    文本: "${el.text.substring(0, 50)}${el.text.length > 50 ? '...' : ''}"`,
+            `    评分: ${el.visibilityScore}/100 | 对比度: ${el.contrastRatio}:1`,
+            `    文字色: ${el.colors.textColor} | 背景色: ${el.colors.backgroundColor}`,
+            `    方法: ${methodIcon} ${el.analysisMethod}`,
+            `    选择器: ${el.selector}`,
+            `    层级链: ${el.domHierarchy.join(' › ')}`,
+            el.suggestion ? `    💡 建议: ${el.suggestion}` : '',
+            ``
+          );
+        });
+
+        resultContent.textContent = lines.join('\n');
+      } catch (error) {
+        resultArea.style.display = 'block';
+        resultContent.textContent = `❌ 分析出错:\n${error instanceof Error ? error.message : String(error)}`;
+        console.error(error);
+      } finally {
+        analyzeBtn.textContent = '🔍 分析文字可见性';
+        analyzeBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
